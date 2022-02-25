@@ -1,0 +1,71 @@
+[
+{
+    "model": "user_data_storage_service.myuser",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$260000$LNp0VH7CWQrtzsJh0HGIPa$k2ZvACStVDminP+kdrKYidbjQ5rXtIiGRUMbaD4l5Yg=",
+        "last_login": "2022-02-25T13:48:59.805Z",
+        "is_superuser": true,
+        "email": "superuser@google.com",
+        "first_name": "SuperUser",
+        "last_name": "",
+        "other_name": "",
+        "photo": "",
+        "phone": "",
+        "birthday": null,
+        "city": "",
+        "additional_info": "",
+        "data_joined": "2022-02-25T13:47:46.390Z",
+        "is_active": true,
+        "is_admin": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "user_data_storage_service.myuser",
+    "pk": 2,
+    "fields": {
+        "password": "pbkdf2_sha256$260000$Cb0RCKqJXQdaTOLZxaG3oN$iWlJgXVpq5i1wNWSYFHuTqmeS6SIhiU5S9unSdaESus=",
+        "last_login": null,
+        "is_superuser": false,
+        "email": "mihailborov1973@google.com",
+        "first_name": "Михаил",
+        "last_name": "Боров",
+        "other_name": "Александрович",
+        "photo": "",
+        "phone": "79532261534",
+        "birthday": "1973-02-25",
+        "city": "Москва",
+        "additional_info": "",
+        "data_joined": "2022-02-25T13:50:06Z",
+        "is_active": true,
+        "is_admin": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "user_data_storage_service.myuser",
+    "pk": 3,
+    "fields": {
+        "password": "pbkdf2_sha256$260000$1QWqFH8GFgR1AH95jN26LS$7rOnz6eSdf8awwdhVjqJZ6tEjQ3Miic73Iw8xig1eKU=",
+        "last_login": null,
+        "is_superuser": false,
+        "email": "annamihailova1985@yandex.ru",
+        "first_name": "Анна",
+        "last_name": "Михайлова",
+        "other_name": "Андреевна",
+        "photo": "",
+        "phone": "79845478123",
+        "birthday": "1986-11-21",
+        "city": "Владивосток",
+        "additional_info": "",
+        "data_joined": "2022-02-25T13:54:22Z",
+        "is_active": true,
+        "is_admin": false,
+        "groups": [],
+        "user_permissions": []
+    }
+}
+]

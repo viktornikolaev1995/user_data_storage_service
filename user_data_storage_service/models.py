@@ -7,9 +7,7 @@ from django.utils import timezone
 
 class MyUserManager(BaseUserManager):
     def create_user(self, email, first_name, password=None, **other_fields):
-        """
-        Creates and saves a User with the given email, birthday and password.
-        """
+        """Creates and saves a User with the given email, first_name and password."""
         if not email:
             raise ValueError('Users must have an email address')
 
@@ -24,10 +22,7 @@ class MyUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, first_name, password=None, **other_fields):
-        """
-        Creates and saves a superuser with the given email, username, date of
-        birth and password.
-        """
+        """Creates and saves a superuser with the given email, first_name and password."""
         other_fields.setdefault('is_admin', True)
         other_fields.setdefault('is_superuser', True)
         other_fields.setdefault('is_active', True)
@@ -52,7 +47,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     city = models.CharField(verbose_name='City', max_length=255, blank=True)
     additional_info = models.TextField(verbose_name='Additional Info', max_length=1000, blank=True)
     data_joined = models.DateTimeField(default=timezone.now)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
     objects = MyUserManager()
@@ -65,7 +60,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Users'
 
     def get_full_name(self):
-        """The user is identified by their email address and user_name"""
+        """The user is identified by their email address"""
         return self.email
 
     def get_short_name(self):
@@ -77,7 +72,6 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def is_staff(self):
-        """Is the user a member of staff?
-        Simplest possible answer: All admins are staff"""
+        """All admins should be a staff"""
         return self.is_admin
 

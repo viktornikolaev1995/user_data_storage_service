@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+
+  # The application
+  app:
+    build:
+      context: .
+    restart: always
+    image: &user_data_storage_service user_data_storage_service
+    ports:
+      - 8000:8000
+    volumes:
+      - ./user_data_storage_service:/user_data_storage_service
+    env_file:
+      - .env
+    command:
+      python manage.py runserver 0.0.0.0:8000
+    links:
+      - db
+    depends_on:
+      - db
+
+  # Database
+  db:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - 5432:5432

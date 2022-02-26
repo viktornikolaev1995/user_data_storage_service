@@ -39,9 +39,9 @@ docker-compose up --build
 docker-compose exec app python manage.py createsuperuser
 ```
 
-Проект доступен по адресу `http://127.0.0.1:8000/login/`
+Проект доступен по адресу http://127.0.0.1:8000/login/
 
-К API есть документация по адресу `http://127.0.0.1:8000/redoc/`, `http://127.0.0.1:8000/swagger/`
+К API есть документация по адресу http://127.0.0.1:8000/redoc/, http://127.0.0.1:8000/swagger/
 
 ### Для просмотра запущенных контейнеров
 

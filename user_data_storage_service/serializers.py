@@ -2,6 +2,15 @@ from rest_framework import serializers
 from .models import MyUser
 
 
+class LoginSerializer(serializers.ModelSerializer):
+    """Login serializer"""
+
+    class Meta:
+        model = MyUser
+        fields = ['email', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+
 class CurrentUserSerializer(serializers.ModelSerializer):
     """Current user serializer"""
 

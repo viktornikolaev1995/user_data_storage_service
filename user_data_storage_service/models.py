@@ -74,4 +74,3 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     def is_staff(self):
         """All admins should be a staff"""
         return self.is_admin
-

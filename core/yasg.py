@@ -6,12 +6,8 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="Snippets API",
-      default_version='v1',
-      description="Test description",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
+      title="Kefir Python Junior Test",
+      default_version='0.1.0',
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),

@@ -1,6 +1,8 @@
 import jwt
 from django.contrib.auth import login, logout
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, permissions, mixins, status
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.generics import GenericAPIView
@@ -10,19 +12,36 @@ import datetime
 from .permissions import AuthorOrReadOnly
 from .models import MyUser
 from .serializers import UsersListSerializer, UpdateUserSerializer, PrivateUsersListSerializer, \
-    PrivateUserDetailSerializer, PrivateCreateUserSerializer, CurrentUserSerializer
+    PrivateUserDetailSerializer, PrivateCreateUserSerializer, CurrentUserSerializer, LoginSerializer
 
 
-class AuthenticationFailedMixin(APIView):
+class Mixin(APIView):
+    queryset = MyUser.objects.all().order_by('id')
+
     def check_authentication_failed(self, request):
-        """if a token does not locate in Cookies returns AuthenticationFailed error"""
+        """if a token does not locate in Cookies or id from Cookies don't match with the current user id from request,
+        returns AuthenticationFailed error"""
         encode_token = request.COOKIES.get('jwt')
+
         if encode_token is None:
+            return self.handle_exception(AuthenticationFailed)
+        decode_token = jwt.decode(encode_token, 'secret', algorithms=['HS256'])
+
+        if request.user.id != decode_token['id']:
             return self.handle_exception(AuthenticationFailed)
 
 
-class CurrentUserAPIView(AuthenticationFailedMixin):
-    """Current user"""
+@method_decorator(name='get', decorator=swagger_auto_schema(
+    tags=['user'],
+    operation_description="Здесь находится вся информация, доступная пользователю о самом себе, "
+                          "а так же информация является ли он администратором",
+    operation_id="current_user_users_current_get",
+    operation_summary="Получение данных о текущем пользователе",
+    responses={'200': 'Successful Response', '400': 'Bad Request', '401': 'Unauthorized'}
+))
+class CurrentUserAPIView(Mixin):
+    """Получение данных о текущем пользователе. Здесь находится вся информация, доступная пользователю о самом себе,
+    а так же информация является ли он администратором"""
 
     def get(self, request):
         self.check_authentication_failed(request)
@@ -31,9 +50,17 @@ class CurrentUserAPIView(AuthenticationFailedMixin):
         return Response(serializer.data)
 
 
-class UsersListAPIView(AuthenticationFailedMixin, generics.ListAPIView):
-    """List of users with short information about themself"""
-    queryset = MyUser.objects.all()
+@method_decorator(name='get', decorator=swagger_auto_schema(
+    tags=['user'],
+    operation_description="Здесь находится вся информация, доступная пользователю о других пользователях",
+    operation_id="users_users_get",
+    operation_summary="Постраничное получение кратких данных обо всех пользователях",
+    responses={'200': 'Successful Response', '400': 'Bad Request', '401': 'Unauthorized', '422': 'Validation Error'}
+))
+class UsersListAPIView(Mixin, generics.ListAPIView):
+    """Постраничное получение кратких данных обо всех пользователях. Здесь находится вся информация, доступная
+    пользователю о других пользователях"""
+
     serializer_class = UsersListSerializer
 
     def get(self, request, *args, **kwargs):
@@ -41,30 +68,51 @@ class UsersListAPIView(AuthenticationFailedMixin, generics.ListAPIView):
         return super().get(self, request, *args, **kwargs)
 
 
-class UpdateUserAPIView(AuthenticationFailedMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, GenericAPIView):
-    """User can update info about only yourself"""
-    queryset = MyUser.objects.all()
+@method_decorator(name='patch', decorator=swagger_auto_schema(
+    tags=['user'],
+    operation_description="Здесь пользователь имеет возможность изменить свои данные",
+    operation_id="edit_user_users__pk__patch",
+    operation_summary="Изменение данных пользователя",
+    responses={'200': 'Successful Response', '400': 'Bad Request', '401': 'Unauthorized', '404': 'Not Found',
+               '422': 'Validation Error'}
+))
+class UpdateUserAPIView(Mixin, mixins.UpdateModelMixin, GenericAPIView):
+    """Изменение данных пользователя. Здесь пользователь имеет возможность изменить свои данные"""
+
     serializer_class = UpdateUserSerializer
     permission_classes = [AuthorOrReadOnly]
-
-    def get(self, request, *args, **kwargs):
-        self.check_authentication_failed(request)
-        return self.retrieve(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
         self.check_authentication_failed(request)
         return self.partial_update(request, *args, **kwargs)
 
 
-class PrivateUsersListCreateAPIView(AuthenticationFailedMixin, generics.ListCreateAPIView):
-    """List of users which can be viewed by admin and also admin can create an user"""
-    queryset = MyUser.objects.all()
+class PrivateUsersListCreateAPIView(Mixin, generics.ListCreateAPIView):
+    """Постраничное получение кратких данных обо всех пользователях. Здесь находится вся информация, доступная
+    пользователю о других пользователях"""
+
     permission_classes = [permissions.IsAdminUser]
 
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        tags=['admin'],
+        operation_description="Здесь находится вся информация, доступная пользователю о других пользователях",
+        operation_id="private_users_private_users_get",
+        operation_summary="Постраничное получение кратких данных обо всех пользователях",
+        responses={'200': 'Successful Response', '400': 'Bad Request', '401': 'Unauthorized', '403': 'Forbidden',
+                   '422': 'Validation Error'}
+    ))
     def get(self, request, *args, **kwargs):
         self.check_authentication_failed(request)
         return super().list(request, *args, **kwargs)
 
+    @method_decorator(name='post', decorator=swagger_auto_schema(
+        tags=['admin'],
+        operation_description="Здесь возможно занести в базу нового пользователя с минимальной информацией о нем",
+        operation_id="private_create_users_private_users_post",
+        operation_summary="Создание пользователя",
+        responses={'201': 'Successful Response', '400': 'Bad Request', '401': 'Unauthorized', '403': 'Forbidden',
+                   '422': 'Validation Error'}
+    ))
     def post(self, request, *args, **kwargs):
         self.check_authentication_failed(request)
         return super().create(request, *args, **kwargs)
@@ -84,20 +132,44 @@ class PrivateUsersListCreateAPIView(AuthenticationFailedMixin, generics.ListCrea
         return serializer_class
 
 
-class PrivateUserDetailRetrieveUpdateDestroyAPIView(AuthenticationFailedMixin, mixins.RetrieveModelMixin,
+class PrivateUserDetailRetrieveUpdateDestroyAPIView(Mixin, mixins.RetrieveModelMixin,
                                                     mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericAPIView):
-    """User, which can be retrieve, update or destroy by admin"""
-    queryset = MyUser.objects.all()
+    """Детальное получение информации о пользователе. Здесь администратор может увидеть всю существующую
+    пользовательскую информацию"""
+
     permission_classes = [permissions.IsAdminUser]
 
+    @method_decorator(name='get', decorator=swagger_auto_schema(
+        tags=['admin'],
+        operation_description="Здесь администратор может увидеть всю существующую пользовательскую информацию",
+        operation_id="private_get_user_private_users__pk__get",
+        operation_summary="Детальное получение информации о пользователе",
+        responses={'200': 'Successful Response', '400': 'Bad Request', '401': 'Unauthorized', '403': 'Forbidden',
+                   '404': 'Not Found', '422': 'Validation Error'}
+    ))
     def get(self, request, *args, **kwargs):
         self.check_authentication_failed(request)
         return self.retrieve(request, *args, **kwargs)
 
+    @method_decorator(name='patch', decorator=swagger_auto_schema(
+        tags=['admin'],
+        operation_description="Здесь администратор может изменить любую информацию о пользователе",
+        operation_id="private_patch_user_private_users__pk__patch",
+        operation_summary="Изменение информации о пользователе",
+        responses={'200': 'Successful Response', '400': 'Bad Request', '401': 'Unauthorized', '403': 'Forbidden',
+                   '404': 'Not Found', '422': 'Validation Error'}
+    ))
     def patch(self, request, *args, **kwargs):
         self.check_authentication_failed(request)
         return self.partial_update(request, *args, **kwargs)
 
+    @method_decorator(name='delete', decorator=swagger_auto_schema(
+        tags=['admin'],
+        operation_description="Удаление пользователя",
+        operation_id="private_delete_user_private_users__pk__delete",
+        operation_summary="Удаление пользователя",
+        responses={'204': 'Successful Response', '401': 'Unauthorized', '403': 'Forbidden', '422': 'Validation Error'}
+    ))
     def delete(self, request, *args, **kwargs):
         self.check_authentication_failed(request)
         return self.destroy(request, *args, **kwargs)
@@ -110,8 +182,17 @@ class PrivateUserDetailRetrieveUpdateDestroyAPIView(AuthenticationFailedMixin, m
         return self.serializer_class
 
 
-class LoginAPIView(APIView):
-    """Login by user"""
+@method_decorator(name='post', decorator=swagger_auto_schema(
+    tags=['auth'],
+    operation_description="После успешного входа в систему необходимо установить Cookies для пользователя",
+    operation_id="login_login_post",
+    operation_summary="Вход в систему",
+    responses={'200': 'Successful Response', '400': 'Bad Request', '422': 'Validation Error'}
+))
+class LoginAPIView(GenericAPIView):
+    """Вход в систему"""
+
+    serializer_class = LoginSerializer
 
     def post(self, request):
         try:
@@ -152,8 +233,16 @@ class LoginAPIView(APIView):
             self.handle_exception(ValidationError)
 
 
+@method_decorator(name='get', decorator=swagger_auto_schema(
+    tags=['auth'],
+    operation_description="При успешном выходе необходимо удалить установленные Cookies",
+    operation_id="logout_logout_get",
+    operation_summary="Выход из системы",
+    responses={'200': 'Successful Response'}
+))
 class LogoutAPIView(APIView):
-    """Logout by authenticated user"""
+    """Выход из системы"""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):

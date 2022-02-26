@@ -2,11 +2,9 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
 from django.forms import TextInput, Textarea
 from django.utils.safestring import mark_safe
-
 from .models import *
 
 
@@ -103,8 +101,5 @@ class MyUserAdmin(UserAdmin):
     get_photo.short_description = 'Photo'
 
 
-# Now register the new UserAdmin...
 admin.site.register(MyUser, MyUserAdmin)
-# ... and, since we're not using Django's built-in permissions,
-# unregister the Group model from admin.
-# admin.site.unregister(Group)
+
